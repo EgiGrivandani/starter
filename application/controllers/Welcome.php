@@ -49,4 +49,11 @@ class Welcome extends CI_Controller {
 		]);
 
 	}
+
+
+	public function templates(){
+		$data['title']      = 'Templates';
+		$data['view_name']  	= 'content_t';
+		$this->load->view('templates', $data);
+	}
 }
