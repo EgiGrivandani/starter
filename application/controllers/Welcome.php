@@ -56,4 +56,30 @@ class Welcome extends CI_Controller {
 		$data['view_name']  	= 'content_t';
 		$this->load->view('templates', $data);
 	}
+
+
+	//===============COMPRESS IMAGE=========================
+	public function compressImage(){
+		$data['title']      = 'Images';
+		$data['view_name']  	= 'compressImage';
+		$this->load->view('templates', $data);
+	}
+
+	public function compressImage_Ajax(){
+		if (!$this->input->is_ajax_request()) {
+			exit('No direct script access allowed');
+		}
+		$this->load->helper('image_helper');
+		// Panggil fungsi helper dengan parameter
+		$upload_result = upload_and_resize(
+			'image',        // Nama field input file
+			'images',       // Path folder upload (misalnya: upload/images/)
+			400,            // Lebar gambar hasil resize
+			400,            // Tinggi gambar hasil resize
+			70              // Kualitas gambar hasil resize (opsional, default 60%)
+		);
+
+		// Kirim respons JSON ke AJAX
+		echo json_encode($upload_result);
+	}
 }
