@@ -82,4 +82,82 @@ class Welcome extends CI_Controller {
 		// Kirim respons JSON ke AJAX
 		echo json_encode($upload_result);
 	}
+
+
+	//===================DATA TABLER SERVER SIDE==============
+	private function _get_datatables_query()
+	{
+		$column_order    = array('date_trx', 'type_trx', 'amount', 'description', 'person');
+		$column_search   = array('date_trx', 'type_trx', 'amount', 'description', 'person');
+		$order   = array('date_trx' => 'desc');
+		$this->db->select('*');
+		$this->db->from('record_trx');
+
+		$i = 0;
+		foreach ($column_search as $item) {
+			if (@$_POST['search']['value']) {
+				if ($i == 0) { // first loop
+					$this->db->group_start();
+					$this->db->like($item, $_POST['search']['value']);
+				} else {
+					$this->db->or_like($item, $_POST['search']['value']);
+				}
+				if (count($column_search) - 1 == $i)
+					$this->db->group_end();
+			}
+			$i++;
+		}
+		if (isset($_POST['order'])) { // here order processing
+			$this->db->order_by($column_order[$_POST['order']['0']['column']], $_POST['order']['0']['dir']);
+		} else{
+			$this->db->order_by(key($order), $order[key($order)]);
+		}
+	}
+	function get_datatables()
+	{
+		$this->_get_datatables_query();
+		if (@$_POST['length'] != -1)
+			$this->db->limit(@$_POST['length'], @$_POST['start']);
+		$query = $this->db->get();
+		return $query->result();
+	}
+	function count_filtered()
+	{
+		$this->_get_datatables_query();
+		$query = $this->db->get();
+		return $query->num_rows();
+	}
+	function count_all()
+	{
+		$this->db->from('record_trx');
+		$query = $this->db->get()->result_array();
+		$count = COUNT($query);
+		return $count;
+	}
+
+
+	public function dtSideserver(){
+		$list = $this->get_dataTables();
+		$data = array();
+		$no = @$_POST['start'];
+
+		foreach ($list as $item) {
+			$row  = array();
+
+			$row[] = $item->date_trx;
+			$row[] = $item->date_trx;
+			$row[] = $item->description;
+			$row[] = $item->person;
+
+			$data[] = $row;
+		}
+
+		$output = array(
+			"draw" => @$_POST['draw'],
+			"recordsTotal" => $this->count_all(),
+			"recordsFiltered" => $this->count_filtered(),
+			"data" => $data,
+		);
+		echo json_encode($output);
+	}
 }
